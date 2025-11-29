@@ -17,9 +17,8 @@ The repository is organized by course and/or project. Each folder typically incl
 ## 🚀 Projects & Coursework
 
 Below is a list of the main projects currently included in this repository:
-
-[comment]: <>- **[Project Name 1](./project-name-1)**  
-[comment]: <>  Short description of the project (course name, topic, technologies used).
+<!-- - **[Project Name 1](./project-name-1)**  
+  Short description of the project (course name, topic, technologies used). -->
 
 
 
