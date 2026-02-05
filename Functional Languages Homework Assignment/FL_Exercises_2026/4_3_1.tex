@@ -1,0 +1,65 @@
+\begin{exercise}{4.3.1}
+Prove the {\sffamily LC} semantic equivalences: 
+\begin{enumerate}[label=(\alph*)]
+    \item $C;$ \textbf{skip} $\cong C \cong \textbf{skip}; C$
+    \item $(C;C');C'' \cong C;(C';C'')$
+    \item \textbf{if true then} $C$ \textbf{else} $C' \cong C$
+    \item \textbf{if false then} $C$ \textbf{else} $C' \cong C'$
+    \item \textbf{while} $B$ \textbf{do} $C \cong$ \textbf{if} $B$ \textbf{then} $C;$ (\textbf{while} $B$ \textbf{do} $C$) \textbf{else} \textbf{skip}
+    \item $\ell:=n; \ell':=n' \cong \begin{cases}\ell':=n';  \ell:=n & \mbox{if } \ell \neq \ell' \\ \ell :=n' &  \mbox{if }  \ell = \ell'\end{cases}$
+\end{enumerate}
+
+\end{exercise}
+
+\begin{solution}
+\begin{enumerate}[label=(\alph*)]
+    \item $C;$ \textbf{skip} $\cong C \cong \textbf{skip}; C$
+    \begin{enumerate}[label=(\alph{enumi}).\arabic*]
+       
+        \item $C ; \textbf{skip}\cong C$
+         \begin{enumerate}[label=(\alph{enumi}).\arabic{enumii}.\arabic*]
+            \item ($\Longrightarrow$): Suppose $\langle C; skip, s\rangle \Downarrow s_1$ implies the existence of $s'$ such that $\langle C,s\rangle \Downarrow s'$ and $\langle skip, s'\rangle \Downarrow s_1$. By ($\Downarrow_{skip}$) we have $s'=s_1$, hence $\langle C,s\rangle \Downarrow s_1$.
+            \item ($\Longleftarrow$): Suppose $\langle C,s\rangle \Downarrow s_1$. Since $\langle skip,s\rangle \Downarrow s$ is always true by ($\Downarrow_{skip}$) it's easy to obtain with ($\Downarrow_{seq}$) that $\langle C; skip, s\rangle \Downarrow s_1$
+        \end{enumerate}
+         \item  \textbf{skip} $;C \cong C$
+        \begin{enumerate}[label=(\alph{enumi}).\arabic{enumii}.\arabic*]
+            \item ($\Longrightarrow$): Suppose $\langle skip;C,s\rangle \Downarrow s_1$. By ($\Downarrow_{seq}$) there must be a state $s'$ such that  $\langle skip, s\rangle \Downarrow s'$ and $\langle C, s'\rangle \Downarrow s_1$. \\ By ($\Downarrow_{skip}$) we have that $s'=s$, replacing we obtain $\langle C,s\rangle \Downarrow s_1$, q.e.d.
+            \item ($\Longleftarrow$): Suppose $\langle C,s\rangle \Downarrow s_1$. Since $\langle skip,s\rangle \Downarrow s$ is always true by ($\Downarrow_{skip}$) it's easy to obtain with ($\Downarrow_{seq}$) that $\langle skip;C, s\rangle \Downarrow s_1$
+        \end{enumerate}
+    \end{enumerate}
+    \item $(C;C');C'' \cong C;(C';C'')$
+    \begin{enumerate}[label=(\alph{enumi}).\arabic*]
+        \item ($   \Longrightarrow$): Suppose that $\langle (C; C');C'', s\rangle \Downarrow s_1$, for this to happen, by ($\Downarrow_{seq}$), there exists $s''$ such that $\langle (C;C'), s\rangle \Downarrow s'' $  and $\langle C'', s''\rangle \Downarrow s_1$.
+        \\
+        Since $\langle (C;C'), s\rangle \Downarrow s'' $ there is another intermediate state $s'$ such that $\langle C, s\rangle \Downarrow s'$ and  $\langle C', s'\rangle \Downarrow s''$ 
+        \\
+        Applying ($\Downarrow_{seq}$) on $(C'; C'')$ from state $s'$, we obtain $\langle C'; C'', s'\rangle \Downarrow s_1$. Then we can execute $\langle C,s\rangle \Downarrow s'$ before again by ($\Downarrow_{seq}$) we conclude $\langle C;(C';C''), s\rangle \Downarrow s_1$, q.e.d.
+        
+        \item ($   \Longleftarrow$): Suppose that $\langle C; (C';C''), s\rangle \Downarrow s_1$, for this to happen,  by ($\Downarrow_{seq}$), there exists $s'$ such that $\langle C,s\rangle \Downarrow s'$ and $\langle (C'; C'', s'\rangle \Downarrow s_1$.
+        \\ Since $\langle (C';C''), s\rangle \Downarrow s_1 $ there is another intermediate state $s''$ such that $\langle C', s'\rangle \Downarrow s''$ and  $\langle C'', s''\rangle \Downarrow s_1$ 
+        \\
+         Applying ($\Downarrow_{seq}$) we conclude $\langle (C;C');C'', s\rangle \Downarrow s_1$, q.e.d.
+    \end{enumerate}
+    \item \textbf{if true then} $C$ \textbf{else} $C' \cong C$
+    \\
+    Suppose  $\langle \text{if } true \text{ then } C \text{ else } C', s\rangle \Downarrow s_1$. Since the boolean expression is always evaluated as $true$, the only applicable rule is ($\Downarrow_{if1}$) which execute the '$then$' branch without changing the state, hence we obtain $\langle C,s\rangle \Downarrow s_1$ 
+    \item \textbf{if false then} $C$ \textbf{else} $C' \cong C'$
+    \\ 
+    Suppose  $\langle \text{if } true \text{ then } C \text{ else } C', s\rangle \Downarrow s_1$.Specularly to the previous one, the boolean expression is always evaluated as $false$, the only applicable rule is ($\Downarrow_{if2}$) which execute the '$else$' branch without changing the state, hence we obtain $\langle C',s\rangle \Downarrow s_1$  
+    \item \textbf{while} $B$ \textbf{do} $C \cong$ \textbf{if} $B$ \textbf{then} $C;$ (\textbf{while} $B$ \textbf{do} $C$) \textbf{else} \textbf{skip}
+    \\
+    We proceed by cases on the value of the boolean guard $B$:
+    \begin{enumerate}[label=(\alph{enumi}).\arabic*]
+        \item \textbf{$B$ is evaluated to $false$}: the loop terminates immediately in state $s$ ($\langle \text{while } B \text{ do } C, s \rangle\Downarrow \langle skip,s\rangle$), by ($\Downarrow_{wh2}$). The corresponding $if$ statement evaluates the guard to $false$, executes the $else$ branch (which is $skip$), and also terminates in state $s$ ($\text{if } B \text { then } C; (\text{ while } B \text{ do } C) \text{ else } \text{ skip }, s \rangle\Downarrow \langle skip,s\rangle$), by ($\Downarrow_{if2}$).
+        \item \textbf{$B$ is evaluated to $true$}: the loop executes the body $C$ to a state $s'$, then execute the entire loop again, i.e ($\langle \text{while } B \text{ do } C, s \rangle\Downarrow \langle skip,s''\rangle$ if and only if $\langle C,s\rangle \Downarrow s'$ and $\langle \text{while } B \text{ do } C, s' \rangle\Downarrow \langle skip,s''\rangle$).
+        \\ On the other hand the \textit{if} statement evaluates the guard to $true$ executing command $C$ and the entire while loop, producing the exact same sequence of states. 
+    \end{enumerate}
+    \item $\ell:=n; \ell':=n' \cong \begin{cases}\ell':=n';  \ell:=n & \mbox{if } \ell \neq \ell' \\ \ell :=n' &  \mbox{if }  \ell = \ell'\end{cases}$
+    \\ We proceed by cases: 
+     \begin{enumerate}[label=(\alph{enumi}).\arabic*]
+        \item \textbf{Case $\ell \neq \ell '$}: the two assignments act on distinct memory locations. Since the order in which independent locations are written does not affect the final contents of each (memory operations are "side-effect free" with respect to other unaffected locations), the order can be reversed without changing the final state of the memory.
+        \item \textbf{Case $\ell = \ell '$}: if the locations match, the second assignment $\ell := n'$ completely overwrites the value previously written by the first $\ell := n$. Therefore, the net effect on the final memory state is identical to that of the single command $\ell := n'$, making the first assignment redundant.
+    \end{enumerate}
+\end{enumerate}
+All equivalences are validated by comparing the partial functions (initial state $\hookrightarrow$ final state) generated by the inference rules of {\sffamily LC} semantics. If the derivations lead to the same final state for every possible input, the commands are semantically indistinguishable.
+\end{solution}

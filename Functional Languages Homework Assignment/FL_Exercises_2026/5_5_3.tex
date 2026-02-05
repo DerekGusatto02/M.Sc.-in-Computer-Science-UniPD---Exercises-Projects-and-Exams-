@@ -1,0 +1,100 @@
+\begin{exercise}{5.5.3}
+Prove
+\\
+\theoremname{Subject reduction}
+If $M: \tau$ and $ M\eval V $ then $V : \tau$ by Rule Induction. 
+\\
+Show that the property $\Phi(M,V)$ defined by
+\[M \eval V \& \forall \tau.M : \tau \implies V : \tau\]
+is closed under the axioms and rules inductively defining $\eval$. \\(For closure under rule ($\Downarrow_{cbn}$) you will need 
+\\
+\theoremname{Lemma 5.3.2}
+If $\Gamma \vdash M : \tau $ and $\Gamma[x \mapsto \tau] \vdash M' : \tau' $ with $x \notin dom(\Gamma)$, then $\Gamma \vdash M'[M/x]:\tau'$.
+\\
+If you are really keen, try proving that, by induction on the structure of $M'$.)
+\end{exercise}
+
+\begin{solution}
+\\
+We want to show that the property $\Phi(M,V) \equiv \forall \tau.(M:\tau \implies V:\tau)$ is closed under the axioms and rules inductively defining M $\eval$ V.
+\begin{enumerate}
+\item \textbf{Values}: \[ (\Downarrow_{val}) \quad V \Downarrow  V\]
+where $V$ is an integer or a boolean value or a lambda function.
+\\
+Suppose $M=V$ and $M:\tau$, then trivially $V:\tau$ since the term does not change. The property $\Phi(V,V)$ holds. 
+\item \textbf{Binary operations}:
+\[(\Downarrow_{op}) \quad\frac{M_1 \Downarrow n_1 \; M_2 \Downarrow n_2}{M_1 \; op\; M_2 \Downarrow n} \; \text{with }n= n_1\;op\;n_2\]
+Suppose $M_1\;op\; M_2 : \tau $ then $M_1 : \tau$ and $M_2 : \tau$. \\
+Hence by inductive hypothesis (IH) $n_1 : \tau$ and  $n_2 : \tau$, thus $n = n_1\;op\;n_2 : \tau $ by definition of $op$. Therefore $V:\tau$ holds.
+\item \textbf{Memory lookup}:
+\[(\Downarrow_{!}) \quad \frac{M\Downarrow \ell }{!M_1 \Downarrow n} \; \text{if }s(\ell) = n\]
+Assume $!M : \tau$, typing implies $M : loc$\\
+By inductive hypothesis (IH) on $M\Downarrow\ell$: \[\ell : loc\]
+Store typing guarantees $s(\ell) = n$ has type $\tau$. Hence $n: \tau$.
+\\So $\Phi(!M,n) $ holds.
+\item \textbf{Assignment}:
+\[(\Downarrow_{:=}) \quad \frac{M_1 \Downarrow \ell \; \; M_2\Downarrow n}{M_1 := M_2\Downarrow \langle skip, s[\ell\mapsto n]\rangle} \]
+Assume $M_1 := M_2 : \tau$.
+\\
+Typing requires:
+\[\tau= comm \quad M_1:loc\quad M_2: int\]
+By IH: 
+\[\ell : loc \quad n:int\]
+The evaluation result is $skip$, hence $\Phi(M_1 := M_2, skip)$ holds.
+The evaluation result is $skip$, typing rules give $skip:comm$. Thus $skip:\tau$.
+\\
+So $\Phi(M_1:=M_2, skip)$ holds.
+
+\item \textbf{Sequence}:
+\[(\Downarrow_{seq}) \quad \frac{M_1 \Downarrow skip \; \; M_2 \Downarrow skip}{M_1 ; M_2 \Downarrow skip} \]
+Assume $M_1;M_2 : \tau$. Typing gives 
+\[\tau:comm \quad M_1:comm \quad M_2:comm\]
+By IH $skip:comm$, this satisfies $skip:\tau$. 
+\\
+So $\Phi(M_1;M_2, skip)$ holds.
+\item \textbf{If}:
+\begin{enumerate}
+    \item \textbf{If-True}:
+    \[(\Downarrow_{if1}) \quad \frac{M_1 \Downarrow true \; \; M_2 \Downarrow V}{\text{if } M_1 \text{ then }M_2 \text{ else }M_3 \Downarrow V} \]
+    \item \textbf{If-False}:
+      \[(\Downarrow_{if2}) \quad \frac{M_1 \Downarrow false \; \; M_3 \Downarrow V}{\text{if } M_1 \text{ then }M_2 \text{ else }M_3 \Downarrow V} \]
+\end{enumerate}
+   Assume $\text{if } M_1 \text{ then }M_2 \text{ else }M_3: \tau$, typing gives:
+    \[M_1: bool\quad M_2:\tau \quad M_3:\tau\]
+    By IH: $V:\tau$ and $true:bool$ ($false:bool$ for [6.2]).
+    \\
+    Hence preservation holds.
+\item \textbf{While}:
+\begin{enumerate}
+    \item \textbf{While-True}:
+    \[(\Downarrow_{wh1}) \quad \frac{M_1 \Downarrow true \; \; M_2 \Downarrow V \; \;  \text{while }M_1 \text{ do }M2\Downarrow skip}{\text{while } M_1 \text{ do }M_2  \Downarrow skip} \]
+    \item \textbf{While-False}:
+      \[(\Downarrow_{wh2}) \quad \frac{M_1 \Downarrow false }{\text{while } M_1 \text{ do }M_2  \Downarrow skip} \]
+\end{enumerate}
+Typing gives \[M_1:bool \quad M_2:comm \quad \text{while } M_1 \text{ do }M_2 :comm\]
+By IH: \[ [7.1]\quad M_1:bool \quad M_2:comm \quad \text{while } M_1 \text{ do }M_2 :comm\]
+\[ [7.2]\quad M_1:bool \quad M_2:comm \]
+The result is $skip:comm$.
+\\Hence the preservation holds.
+\item \textbf{Call-by-Name}:
+\[(\Downarrow_{cbn})\quad \frac{M_1 \Downarrow \lambda x.M_1'\quad M_1'[M_2/x]\Downarrow V}{M_1M_2 \Downarrow V} \]
+Assume $M_1M_2: \tau$.
+Typing rules for application implies: \[M_1:\omega \to \tau \quad M_2:\omega \]
+By inductive hypothesis on the first premise:\[\lambda x.M_1':\omega \to \tau\]
+Thus typing of abstraction gives:
+\[x:\omega \vdash M_1':\tau\]
+Now by (\textbf{Lemma 5.3.2}):
+\[M_2:\omega \implies M_1'[M_2/x]:\tau\]
+By IH on the second premise: $V:\tau$.
+So the property holds.
+\item \textbf{Call-by-Value}:
+\[(\Downarrow_{cbv})\quad \frac{M_1 \Downarrow \lambda x.M_1'\; \; M_2\Downarrow V_2\; \;   M_1'[V_2/x]\Downarrow V}{M_1M_2 \Downarrow V} \]
+Typing gives: \[M_1: \omega \to \tau \quad M_2:\omega\]
+By inductive hypothesis: $V_2:\omega$.
+By IH on the final premise: $V:\tau$.
+So the property holds.
+\end{enumerate}
+We have shown closure of $\Phi(M,V)$ under every evaluation rule.
+Therefore: 
+\[M \eval V \& \forall \tau.M : \tau \implies V : \tau\]
+\end{solution}

@@ -1,0 +1,67 @@
+\begin{exercise}{2.5.2}
+Consider the subset $\mathcal{D}$ of the set $\mathbb{N}\times\mathbb{N}$ of pairs of natural numbers defined by following axioms and rules
+    \[(n,0) \in \mathcal{D}\]
+    \[\frac{(n,n')\in \mathcal{D}}{(n, n+n')\in \mathcal{D}}\]
+Use Rule Induction to prove
+\[(n,n')\in \mathcal{D} \implies \exists k \in \mathbb{N} . n'=k\ast n\]
+(where $\ast$ denotes multiplication). Use Mathematical Induction on $k$ to show conversely that if $n'=k\ast n$ then $(n,n') \in \mathcal{D}$
+
+\end{exercise}
+
+\begin{solution}
+\begin{enumerate}
+    \item \textbf{Rule induction} We claim \[(n,n')\in \mathcal{D} \implies \exists k \in \mathbb{N} . n'=k\ast n\]
+We prove this using rule induction, which follows the way the set $\mathcal{D}$ is defined.
+        \begin{enumerate}
+            \item \textsc{Base case} The base rule says:
+\[(n,0) \in \mathcal{D}\]
+We need to show there exists 
+$k\in \mathbb{N}$ such that $n'= k\ast n  = 0$. 
+\\
+Choose $k=0$. Then clearly:
+\[0\ast n= 0 \]
+Thus the base case holds.
+            \item \textsc{Inductive step} The inductive rule says:
+\[\frac{(n,n')\in \mathcal{D}}{(n, n+n')\in \mathcal{D}}\]
+
+Assume as the induction hypothesis:
+\[(n,n') \in \mathcal{D} \text{ and } n'=kn \implies n+n'= (k+1)\ast n\]
+We must show: 
+\[(n,n+n') \in \mathcal{D} \implies \exists k \in \mathbb{N}. n+n' = k\ast n\]
+By induction hypothesis there exists some $k\in \mathbb{N}$ such that $n'=k\ast n$. Then:
+\[n+n' = n+k\ast n = (k+1)\ast n\]
+Let $k'=k+1$. Then $n+n' = k'\ast n$, with $k'\in \mathbb{N}$.
+\\
+Thus, the inductive step holds.
+        
+\end{enumerate}
+
+By rule induction we can conclude 
+\[(n,n')\in \mathcal{D} \implies \exists k \in \mathbb{N} . n'=k\ast n\]
+\item \textbf{Mathematical Induction}
+Now we prove the converse.
+Claim:
+\[\forall n \in \mathbb{N}, \forall k \in \mathbb{N}, (n, k\ast n) \in \mathcal{D}\]
+We will use mathematical induction on $k$.
+\begin{enumerate}
+            \item \textsc{Base case $(k=0)$} We need to show:
+\[(n,0\ast n)=(n,0)\in \mathcal{D}\]
+This is exactly the base rule of $\mathcal{D}$, thus the base case holds.
+            \item \textsc{Inductive step} 
+            Assume the inductive hypothesis for some $k\in \mathbb{N}$: 
+            \[(n, k\ast n) \in \mathcal{D}\]
+            We need to prove: 
+            \[(n, (k+1)\ast n) \in \mathcal{D}\]
+            Observe that 
+            \[(k+1) \ast n = k \ast n + n\]
+            By inductive hypothesis $(n, k\ast n) \in \mathcal{D}$ and by inductive rule of $\mathcal{D}$, adding $n$ to the second component gives: 
+            \[(n,k\ast n+n)=(n,(k+1)\ast n)\in\mathcal{D}\]
+            Thus the inductive step holds.
+\end{enumerate}
+By mathematical induction on $k$ we conclude:
+
+\[(n,k\ast n)\in\mathcal{D}  \qquad \forall k\in \mathbb{N},\forall n\in \mathbb{N}\]
+\end{enumerate}
+We conclude that $\mathcal{D}$ is exactly the set of pairs $(n,n')$ such that $n'=k\ast n$ for some $k\in\mathbb{N}$:
+\[\mathcal{D}=\{(n,k\ast n)\mid n\in \mathbb{N},k\in \mathbb{N}\}\]
+\end{solution}

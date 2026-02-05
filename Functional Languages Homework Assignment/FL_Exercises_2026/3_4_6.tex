@@ -1,0 +1,162 @@
+\begin{exercise}{3.4.6} Complete the details of the proofs of properties (a) and (b).
+\\
+\theoremname{Equivalence of {\sffamily LC} transition and evaluation semantics}
+For all configurations $\langle P, s \rangle$ and all terminal configuration $\langle V, s' \rangle$
+\[ \langle P,s\rangle \Downarrow \langle V,s'\rangle \iff \langle P,s\rangle \to^* \langle V,s'\rangle\]
+\begin{enumerate}[label=(\alph*)]
+\item $ \langle P,s\rangle \Downarrow \langle V,s'\rangle \implies \langle P,s\rangle \rightarrow^* \langle V,s'\rangle$
+
+\item $\langle P,s\rangle \rightarrow \langle P',s'\rangle \& \langle P',s'\rangle \Downarrow \langle V,s''\rangle \implies \langle P,s\rangle \Downarrow \langle V,s''\rangle$
+\end{enumerate}
+\end{exercise}
+
+\begin{solution}
+\begin{enumerate}[label=(\alph*)]
+\item $ \langle P,s\rangle \Downarrow \langle V,s'\rangle \implies \langle P,s\rangle \rightarrow^* \langle V,s'\rangle$
+
+By Rule Induction, to prove (a) it suffices to show that the property is closed under the axioms and rules inductively defining . 
+
+\begin{enumerate}[label=(\alph{enumi}).\arabic*]
+\item \textbf{Values (integer, boolean) and skip}. In this cases the only applicable rule is \[(\Downarrow_{con}) \quad \langle c,s\rangle \Downarrow \langle c,s\rangle \text{ with } c\in \mathbb{Z}\cup\mathbb{B}\cup \{skip\}\]
+By reflexive-transitive closure of $\rightarrow$,  
+\[\langle V,s\rangle \rightarrow^* \langle V,s\rangle\]
+holds for all $V$.
+\item \textbf{Memory lookup} 
+\[(\Downarrow_{loc}) \quad \langle !\ell , s\rangle \Downarrow \langle n,s \rangle \;\text{with }\ell \in dom(s) \text{ and } s(\ell) = n \]
+We can use the axiom \[\langle !\ell , s\rangle \rightarrow \langle n,s \rangle \;\text{with }\ell \in dom(s) \text{ and } s(\ell) = n \] 
+By reflexive-transitive closure of $\rightarrow$ then 
+\[\langle !\ell , s\rangle \rightarrow^* \langle n,s \rangle \;\text{with }\ell \in dom(s) \text{ and } s(\ell) = n \] 
+\item \textbf{Binary operations}
+ \[ (\Downarrow_{op}) \quad  \quad \frac{\langle E_1,s\rangle \Downarrow \langle n_1, s'\rangle \; \; \langle E_2,s'\rangle \Downarrow \langle n_2, s''\rangle}{\langle E_1 \, op \, E_2,s\rangle \Downarrow \langle c, s''\rangle} \text{with }c=n_1\;op\;n_2\]
+ By Inductive Hypothesis (IH) we have that 
+ \begin{enumerate}[label=(\roman*)]
+     \item $\langle E_1,s\rangle \rightarrow^* \langle n_1, s'\rangle$;
+     \item $\langle E_2,s'\rangle \rightarrow^* \langle n_2, s''\rangle$;
+ \end{enumerate}
+ and we have the axiom
+           \[ (\overset{\rightarrow}{op_3}) \quad \frac{}{\langle n \, op \, m,s\rangle \to \langle c, s\rangle} \; \text{with } c = n \, op \, m\]
+
+  Hence 
+ \[\langle E_1 \, op \, E_2,s\rangle \overset{(i)}{\rightarrow^*} \langle n_1 \, op \, E_2,s'\rangle \overset{(ii)}{\rightarrow^*} \langle n_1 \, op \, n_2,s''\rangle \overset{(\overset{\rightarrow}{op_3})}{\rightarrow}  \langle c, s''\rangle \]
+ which can be rewritten as
+  \[\langle E_1 \, op \, E_2,s\rangle {\rightarrow^*}  \langle c, s''\rangle \]
+  \item \textbf{Assignment}
+ \[ (\Downarrow_{set}) \quad  \quad \frac{\langle E,s\rangle \Downarrow \langle n, s'\rangle }{\langle \ell:=E,s\rangle \Downarrow \langle skip, s'[\ell \mapsto n]\rangle}\]
+ By Inductive Hypothesis (IH) we have that $\langle E,s\rangle \rightarrow^* \langle n, s'\rangle$. By axiom 
+   \[ (\overset{\rightarrow}{set_2}) \quad \frac{}{\langle \ell:=n,s\rangle \to \langle skip, s[\ell \mapsto n]\rangle}\]
+ and by reflexive-transitive closure of $\rightarrow$ , it follows that
+  \[ \langle \ell:=E,s\rangle \to^* \langle \ell:=n,s'\rangle \rightarrow^* \langle skip, s'[\ell \mapsto n]\rangle\]
+
+    \item \textbf{Sequence}
+ \[ (\Downarrow_{seq}) \quad  \quad \frac{\langle C_1,s\rangle \Downarrow\langle skip, s' \rangle \; \; \langle C_2, s' \rangle \Downarrow\langle skip, s''\rangle}{\langle C_1;C_2, s\rangle \Downarrow\langle skip, s''\rangle}\]
+
+ By Inductive Hypothesis (IH) we have that 
+ \begin{enumerate}[label=(\roman*)]
+     \item $\langle C_1,s\rangle \to^*\langle skip, s' \rangle$;
+     \item $\langle C_2, s' \rangle \to^*\langle skip, s''\rangle$;
+ \end{enumerate}
+ and we have the axiom
+     \[ (\overset{\rightarrow}{seq_2}) \quad \frac{}{\langle skip;C_2,s\rangle \to \langle C_2,s\rangle}\]
+     and the rule 
+      \[ (\overset{\rightarrow}{seq_1}) \quad \frac{\langle C_1,s\rangle \to \langle C_1', s'\rangle}{\langle C_1;C_2,s\rangle \to \langle C_1';C_2, s'\rangle}\]
+      Hence 
+       \[ \langle C_1;C_2,s\rangle \overset{(\overset{\rightarrow}{seq_2}) \& (i)}{\to^*} \langle skip;C_2, s'\rangle \overset{\overset{\rightarrow}{seq_1}) \& (ii)}{\to^*} \langle skip, s''\rangle\]
+
+\item \textbf{If-true}
+ \[ (\Downarrow_{if1}) \quad  \quad \frac{\langle B,s\rangle \Downarrow\langle true, s' \rangle \; \; \langle C_1, s' \rangle \Downarrow\langle skip, s''\rangle}{\langle \text{if }B \text{ then }C_1 \text{ else }C_2, s\rangle \Downarrow\langle skip, s''\rangle}\]
+By Inductive Hypothesis (IH) we have that 
+ \begin{enumerate}[label=(\roman*)]
+     \item $\langle B,s\rangle \to^*\langle true, s' \rangle$;
+     \item $\langle C_1, s' \rangle \to^*\langle skip, s''\rangle$;
+ \end{enumerate}
+ and we have the axiom
+     \[ (\overset{\rightarrow}{if2}) \quad \frac{}{\langle \text{if }true \text{ then }C_1 \text{ else }C_2, s\rangle \to \langle C_1,s\rangle}\]
+
+Hence 
+\[\langle \text{if }B \text{ then }C_1 \text{ else }C_2, s\rangle \overset{(i)}{\to^*}\langle \text{if }true \text{ then }C_1 \text{ else }C_2, s'\rangle \overset{(\overset{\rightarrow}{if2})}{\to}\]
+\[\langle C_1, s' \rangle \overset{(i)}{\to^*}\langle skip, s''\rangle \]
+\item \textbf{If-false}
+ \[ (\Downarrow_{if2}) \quad  \quad \frac{\langle B,s\rangle \Downarrow\langle false, s' \rangle \; \; \langle C_2, s' \rangle \Downarrow\langle skip, s''\rangle}{\langle \text{if }B \text{ then }C_1 \text{ else }C_2, s\rangle \Downarrow\langle skip, s''\rangle}\]
+By Inductive Hypothesis (IH) we have that 
+ \begin{enumerate}[label=(\roman*)]
+     \item $\langle B,s\rangle \to^*\langle false, s' \rangle$;
+     \item $\langle C_2, s' \rangle \to^*\langle skip, s''\rangle$;
+ \end{enumerate}
+ and we have the axiom
+     \[ (\overset{\rightarrow}{if3}) \quad \frac{}{\langle \text{if }false \text{ then }C_1 \text{ else }C_2, s\rangle \to \langle C_2,s\rangle}\]
+Hence 
+\[\langle \text{if }B \text{ then }C_1 \text{ else }C_2, s\rangle \overset{(i)}{\to^*}\langle \text{if }false \text{ then }C_1 \text{ else }C_2, s'\rangle \overset{(\overset{\rightarrow}{if3})}{\to}\]
+\[\langle C_2, s' \rangle \overset{(i)}{\to^*}\langle skip, s''\rangle \]
+\item \textbf{While-false}
+\[ (\Downarrow_{wh2}) \quad  \quad \frac{\langle B,s\rangle \Downarrow\langle false, s' \rangle }{\langle \text{while }B \text{ do }C, s\rangle \Downarrow\langle skip, s'\rangle}\]
+By Inductive Hypothesis (IH) we have that 
+ \begin{enumerate}[label=(\roman*)]
+     \item $\langle B,s\rangle \to^*\langle false, s' \rangle$;
+ \end{enumerate}
+ and we have the rule
+     \[ (\overset{\rightarrow}{whl}) \quad \frac{}{\langle \text{while }B \text{ do }C, s\rangle \to \langle \text{if }B \text{ then }(C; \text{while }B \text{ do }C)\text{ else }skip, s\rangle}\]
+Hence 
+\[\langle \text{while }B \text{ do }C, s\rangle \overset{(\overset{\rightarrow}{whl})}{\to} \langle \text{if }B \text{ then }(C; \text{while }B \text{ do }C)\text{ else }skip, s\rangle \overset{(i)}{\to^*} \]\[\langle \text{if }false \text{ then }(C; \text{while }B \text{ do }C)\text{ else }skip, s'\rangle \overset{(\overset{\rightarrow}{if3})}{\to} \langle skip, s'\rangle\]
+\end{enumerate}
+
+\item $\langle P,s\rangle \rightarrow \langle P',s'\rangle \& \langle P',s'\rangle \Downarrow \langle V,s''\rangle \implies \langle P,s\rangle \Downarrow \langle V,s''\rangle$
+
+By Rule Induction, to prove (b) it suffices to show that the property is closed under the axioms and rules inductively defining . 
+
+\begin{enumerate}[label=(\alph{enumi}).\arabic*]
+
+\item \textbf{Memory lookup} \[\langle !\ell, s\rangle \to \langle n,s\rangle \; \text{with }s(\ell) = n\]
+Assume $\langle n,s\rangle \Downarrow \langle V,s''\rangle$. Since $n$ is an integer final value, by $\Downarrow_{con}$ we have $V = n$ and $s''=s$. 
+\\
+We need to show $\langle \ell, s\rangle \Downarrow \langle n,s\rangle$ but this is exactly given by $\Downarrow_{loc}$, thus this holds.
+
+\item \textbf{Binary operations final step}
+ \[ \langle n_1 \; op\; n_2, s\rangle \to \langle n,s\rangle \; \text{with } n = n_1\;op\;n_2\]
+ Assume $\langle n,s\rangle \Downarrow \langle V,s''\rangle$. Since $n$ is an integer final value, by $\Downarrow_{loc}$ we have $V = n$ and $s''=s$. 
+\\
+By ($\Downarrow_{op}$), knowing that values evaluate themselves: $\langle n_1,s\rangle \Downarrow n_1$ and $\langle n_2,s\rangle \Downarrow n_2$, hence 
+ \[ \langle n_1 \; op\; n_2, s\rangle \Downarrow \langle n,s\rangle \; \text{with } n = n_1\;op\;n_2\]
+  \item \textbf{Assignment (final step)}
+ \[ \langle \ell := n, s\rangle \to \langle skip, s[\ell\mapsto n]\rangle\]
+Assume $\langle skip, s[\ell\mapsto n]\rangle \Downarrow \langle V,s''\rangle$, then we have $V = skip$ and $s''=s[\ell\mapsto n]$. 
+\\
+By ($\Downarrow_{set}$),  knowing that values evaluate themselves:
+ \[ \langle \ell := n, s\rangle \Downarrow \langle skip, s[\ell\mapsto n]\rangle\]
+\item \textbf{If-true}
+ \[ \langle \text{if }true \text{ then }C_1 \text{ else }C_2, s\rangle \to \langle C_1,s\rangle\]
+Assume $\langle C_1,s\rangle \Downarrow \langle V,s''\rangle$.
+We know that $\langle true,s\rangle \Downarrow \langle true,s\rangle$ by ($\Downarrow_{con}$) so we can apply ($\Downarrow_{if1}$), hence  
+\[ \langle \text{if }true \text{ then }C_1 \text{ else }C_2, s\rangle \Downarrow  \langle V,s''\rangle\]
+\item \textbf{If-false}
+ \[ \langle \text{if }false \text{ then }C_1 \text{ else }C_2, s\rangle \to \langle C_2,s\rangle\]
+Assume $\langle C_2,s\rangle \Downarrow \langle V,s''\rangle$.
+We know that $\langle false,s\rangle \Downarrow \langle false,s\rangle$ by ($\Downarrow_{con}$) so we can apply ($\Downarrow_{if2}$), hence  
+\[ \langle \text{if }false \text{ then }C_1 \text{ else }C_2, s\rangle \Downarrow  \langle V,s''\rangle\]
+\item \textbf{Binary operations}
+ \[ \frac{\langle E_1,s\rangle\to\langle E_1',s'\rangle}{\langle E_1 \; op\; E_2, s\rangle \to \langle E_1' \; op\; E_2, s'\rangle}\]
+ Assume $\langle E_1' \; op\; E_2, s'\rangle \Downarrow \langle n,s''\rangle$, we know that $\langle E_1',s\rangle \Downarrow  \langle n_1, s'\rangle$ and $\langle E_2,s'\rangle \Downarrow  \langle n_2, s''\rangle$
+ By Inductive Hypothesis (IH): $\langle E_1,s\rangle\to\langle E_1',s'\rangle$ and $\langle E_1',s\rangle \Downarrow  \langle n_1, s'\rangle$ implies $\langle E_1,s\rangle \Downarrow  \langle n_1, s'\rangle$.
+ Hence by ($\Downarrow_{op}$) \[\langle E_1 \; op\; E_2, s\rangle \Downarrow \langle n,s''\rangle\]
+\item \textbf{Assignment}
+   \[ \frac{\langle E,s\rangle \to \langle E', s'\rangle}{\langle \ell:=E,s\rangle \to \langle \ell:=E', s'\rangle}\]
+   Assume $\langle \ell:=E', s'\rangle \Downarrow \langle skip, s'[\ell \mapsto n]\rangle$, hence we can deduce $\langle E', s\rangle \Downarrow \langle n, s'\rangle$. 
+\\   By IH on $langle E,s\rangle \to \langle E', s'\rangle$ we have that $\langle E, s\rangle \Downarrow \langle n, s'\rangle$. 
+   \\Now we can apply ($\Downarrow_{set}$) and obtain
+   \[\langle \ell:=E,s\rangle \Downarrow \langle skip, s'[\ell \mapsto n]\rangle\]
+\item \textbf{If-Then-Else}
+         \[\frac{\langle B,s\rangle \to \langle B', s'\rangle}{\langle \text{if }B \text{ then }C_1 \text{ else }C_2, s\rangle \to \langle \text{if }B' \text{ then }C_1 \text{ else }C_2, s'\rangle}\]
+         Assume $\langle \text{if }B' \text{ then }C_1 \text{ else }C_2, s'\rangle \Downarrow \langle V, s''\rangle $
+         By IH on $\langle B,s\rangle \to \langle B', s'\rangle$ we know that if $\langle B', s'\rangle \Downarrow \langle b, s''\rangle$ with $b \in \mathbb{B} $ then $\langle B, s\rangle \Downarrow \langle b, s''\rangle$, hence this never change the evaluation of the boolean condition.
+         \[\langle \text{if }B \text{ then }C_1 \text{ else }C_2, s\rangle \Downarrow \langle V, s''\rangle \]
+\item \textbf{Sequence}
+ \[ \frac{\langle C_1,s\rangle \to \langle C_1', s'\rangle}{\langle C_1;C_2,s\rangle \to \langle C_1';C_2, s'\rangle}\]
+Assume $\langle C_1';C_2, s'\rangle \Downarrow \langle skip, s'''\rangle$. We deduce $\langle C_1, s'\rangle \Downarrow \langle skip, s'\rangle $ and $\langle C_2, s''\rangle \Downarrow \langle skip, s'''\rangle $.
+By IH, since $\langle C_1,s\rangle \to \langle C_1', s'\rangle$ we have $\langle C_1,s\rangle \Downarrow \langle skip, s'\rangle$.
+Hence by ($\Downarrow_{seq}$) we obtain: 
+\[ \langle C_1;C_2, s\rangle \Downarrow \langle skip, s'''\rangle \]
+\end{enumerate}
+
+
+
+\end{enumerate}
+\end{solution}

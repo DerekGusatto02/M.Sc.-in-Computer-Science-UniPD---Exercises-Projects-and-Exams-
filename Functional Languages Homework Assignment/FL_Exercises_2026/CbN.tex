@@ -1,0 +1,61 @@
+
+% --------------------
+% Final exercise (call-by-name)
+% --------------------
+\begin{exercise}{Call-by-name equivalence}
+Consider the following definition of small-step call-by-name reduction $\to_n$:
+\[
+\frac{}{\,app{(lam({x}{M})},{N}) \to_n M[x := N]}
+\qquad
+\frac{M \to_n M'}{\,app({M},{N}) \to_n app({M'},{N})}
+\]
+Show that $M \eval V$ if and only if $M \steps V$.
+\end{exercise}
+
+\begin{solution}
+We prove both implications.
+
+\begin{enumerate}
+    \item {($\Rightarrow$)} If $M \Downarrow V$ then $M \to_n^* V$
+\\
+We proceed by induction on the derivation of $M \eval V$. We need to show that if a term evaluates to a value in a single "big step," there exists a sequence of atomic transitions (reflexive-transitive closure $\to_n^*$) that achieves the same result.
+\begin{enumerate}
+    \item \textsc{Base Case - Axiom}: 
+    Assume $lam(x.M)\Downarrow lam(x.M)$. 
+    By the definition of reflexive-transitive closure, every configuration is related to itself in zero steps $lam(x.M)\to_n^0 lam(x.M)$. Therefore, $lam(x.M)\to_n^* lam(x.M)$ is trivially true.
+    \item \textsc{Inductive Step - Rule}: Assume $app(M_1, M_2)\Downarrow V$. By inductive hypothesis on the premises.
+    \begin{enumerate}
+        \item on $M_1\Downarrow lam(x.M)$ we have $M_1\to^*_n lam(x.M)$;
+        \item on $M[x:=M_2]\Downarrow V$ we have $M[x:=M_2]\to^*_n V$.
+    \end{enumerate}
+    From the second transition rule given (congruence), we know that if $M_1$ can take steps, then the entire application can progress: $app(M_1, M_2) \to_n^* app(lam(x.M), M_2)$. 
+    \\From the first transition rule ($\beta$-reduction): $app(lam(x.M), M_2) \to_n M[x:=M_2]$.
+    \\ Joining the sequences by transitivity: 
+ \[app(M_1, M_2) \to_n^* app(lam(x.M), M_2)\to_n M[x:=M_2]\to_n^* V\]
+ We conclude that  \[app(M_1, M_2) \to_n^*  V\]
+
+\end{enumerate}
+
+\item {($\Leftarrow$)} If $M \to_n^* V$ then  $M \Downarrow V$ 
+We proceed by induction on the length of the reduction sequence $M \to_n^k V$.
+\begin{enumerate}
+    \item \textsc{Base Case ($k=0$)}: Assume $M \to^0_n V$, then $M=V$. Since $V$ is a value (lambda abstraction), by the axiom  ($\Downarrow_{(val)}$) we have $V\Downarrow V$. 
+
+     \item \textsc{Inductive Step ($k=n+1$)}: Assume $M \to_n M'\to_n^n V$. By inductive hypothesis we know $M'\Downarrow V$. To conclude $M\Downarrow V$ we show (\textbf{\textit{Lemma}}): if $M \to_n M' $ and $M'\Downarrow V$ then $M\Downarrow V$. \\ We show the (\textbf{\textit{Lemma}}) by cases on $M \to M'$:
+    \begin{enumerate}
+        \item \textsc{($\beta$-reduction)}: $app(lam(x.M),N) \to_n M[x:=N]$
+        \\
+        Assume $ M[x:=N] \Downarrow V$. 
+        \\Since we know by $(\Downarrow_{val})$ that  $lam(x.M) \Downarrow lam(x.M)$ we obtain, by Big-Step rule for application, $app(lam(x.M),N) \Downarrow V$
+         \item \textsc{(Structural Rule)}: $app(M,N) \to_n app(M', N)$ with $M\to_n M'$
+         \\
+         Assume $app(M',N) \Downarrow V$, by inversion there must be $M$ and $P$ such that $M' \Downarrow lam(x.P)$ and $P[x:=N]\Downarrow V$. By inductive hypothesis on $M\to_n M'$ and $M'\Downarrow lam(x.P)$ we obtain $M\Downarrow lam(x.P)$. 
+        \\
+        Now we can use Big-Step rule for application and conclude $app(M,N)\Downarrow V$.
+    \end{enumerate}
+\end{enumerate}
+
+\end{enumerate}
+Equivalence is demonstrated because every Big-Step derivation tree can be linearized into a sequence of Small-Step transitions and each Small-Step transition step preserves the final "meaning" of the term defined by the Big-Step relation.
+
+\end{solution}

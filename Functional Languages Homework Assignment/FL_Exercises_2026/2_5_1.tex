@@ -1,0 +1,25 @@
+\begin{exercise}{2.5.1}
+Give an example of an SMC-machine configuration from which there is an infinite sequence of transitions.
+\end{exercise}
+\begin{solution}
+An example of an SMC-machine configuration that produces an infinite sequence of transitions is a \texttt{while} loop that never terminates.
+\paragraph{Definition of the SMC Configuration}
+A configuration of the SMC machine is defined as a triple $\langle c,r,\sigma \rangle$, so for a complete example, we must define:
+\begin{itemize}
+\item $c$ (Control Stack): A stack of phrases (commands or expressions, as define by the {\sffamily LC} language) to be evaluated;
+\item $r$ (Value Stack): A stack used for storing intermediate and final results;
+\item $\sigma$ (Memory State): A partial function mapping a finite set of locations to integers, referred to as "state".
+\end{itemize}
+
+To create a never-ending loop we need an always true condition, like the equivalence between an integer and itself in the same state. To be sure that the state of the variable never changes we need the loop to execute an operation that doesn't change any variable state, e.g. the \texttt{skip} operation. We don't need any particular stack or memory, so we can use an empty stack ($\varepsilon$) and any state $s$. 
+We obtain the following initial configuration:
+\[ \langle \text{\textbf{while} }0=0 \text{ \textbf{do skip}}, \varepsilon, s \rangle \]
+\paragraph{Transition Logic and Divergence}
+This specific configuration generates an infinite sequence of transitions for the following technical reasons:
+\begin{itemize}
+\item \textbf{Equivalence evaluation}: The Boolean expression $0=0$ is parsed by the SMC using its predefined binary operations. Since $n=n$ always evaluates to true, the loop condition will never change. 
+\item \textbf{\texttt{While} loop semantics}: According to the informal semantics of the machine, the $\textbf{while } n=n \textbf{ do skip}$ command is executed repeatedly as long as the expression $n=n$ remains true. The machine will parse the statement, evaluate for equality, execute the body (\textbf{skip}), and push the while command back onto the control stack.
+\item \textbf{Deterministic system}: The SMC is a deterministic transition system, meaning that the head of the control stack uniquely determines the next transition. Since there are no stopping conditions, the machine will continue to cycle through the states indefinitely.
+\end{itemize}
+
+\end{solution}

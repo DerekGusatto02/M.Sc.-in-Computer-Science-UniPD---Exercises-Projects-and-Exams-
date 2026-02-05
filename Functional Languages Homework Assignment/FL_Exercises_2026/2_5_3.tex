@@ -1,0 +1,45 @@
+\begin{exercise}{2.5.3}
+Let $(Config, \rightarrow) $ be a transition system. Give an inductive definition of the subset of $Config \times Config$ consisting of the reflexive-transitive closure of $\rightarrow$. Use Mathematical Induction and Rule Induction to prove that your  definition gives the same relation as
+\\
+\theoremname{Definition 1.1.1(i)}
+$\to^*$ denotes the binary relation on $Config$ which is the \textit{reflexive-transitive} closure of $\to$. In other words $c\rightarrow^* c'$ holds just in 
+\[c = c_0 \rightarrow c_1 \rightarrow \dots \rightarrow c_{n+1} \to c_n = c'\]
+holds for some $c_0,\dots, c_n \in Config $ (where $n \geq 0$; the case $n=0$ just means $c=c'$).
+
+\end{exercise}
+
+\begin{solution}
+\begin{enumerate}
+    \item \textbf{Inductive Definition of Reflexive-Transitive Closure}
+Let $(Config, \rightarrow) $ be a transition system, where $Config$ is the set of configurations and $\rightarrow$ is the transition relation. The iterated transition relation $\rightarrow^*$ is defined inductively by the following: 
+\begin{itemize}
+    \item Reflexivity axiom: \[\frac{}{s \to^* s}\]
+    \item Transition step rule:
+    \[ \frac{s \to s' \qquad  s' \to^* s''}{s \to^* s''}\]
+\end{itemize}
+\item \textbf{Equivalence Proof}  We need to show that the two definitions generate the same relation, i.e. the inductive relation ($R_{IND}$) is equal to the relation given by \textit{Definition 1.1.1(i)} ($R_{DEF}$).
+\begin{enumerate}
+    \item \textbf{$R_{IND} \subseteq R_{DEF}$}. \\ To show that every pair $(s,s')$ defined by the inductive rules satisfies \textit{Definition 1.1.1(i)} we use rule induction.
+    \begin{enumerate}
+        \item \textsc{Closure under axiom}. We must show that $s\to^*s$ according to \textit{Definition 1.1.1(i)}. This is true for $n=0$, where $s=s_0=s'$
+        \item \textsc{Closure under transition rule}. Assume that $s\to^*s'$ and that the inductive hypothesis $s'\to^* s''$ holds (i.e., there exists a sequence of length $n$ from $s'$ to $s''$). Then by  \textit{Definition 1.1.1(i)}  we can build a sequence of length $n+1$ adding $s \to s'$ before the existing sequence, thus $s \to^* s''$ is satisfied.
+    
+    \end{enumerate}
+     \item \textbf{$R_{DEF} \subseteq R_{IND}$}\\
+     To show that every sequence of transitions in \textit{Definition 1.1.1(i)} is derivable from the inductive rules, we proceed by Mathematical Induction on the number of steps $n$ of the sequence.
+     \begin{enumerate}
+        \item \textsc{Base Case ($n=0$)}  If the sequence has $0$ steps, then $s=s'$. By the reflexivity axiom we know that $s\to^*s'$ is always derivable.
+        \item \textsc{Inductive Step} Assume that for all sequences of length $n$ from $s$ to $s_{n+1}$ $s \to^* s_{n+1}$ in the inductive system. Consider a sequence of length $n+1$:
+        \[s\to s_1 \to \dots \to s_{n+1}\]
+        \begin{enumerate}
+            \item From the sequence, we know that there is a direct step $s' \to s_1$.
+            \item The remainder of the sequence $(s_1 \to \dots \to s_{n+1})$ has length $n$. By the inductive hypothesis, this sequence implies that $(s_1 \to^* s_{n+1})$ is inductively derivable.
+            \item Appliyng the transition step rule on $s\to s_1$ and $s_1 \to^* s_{n+1}$ we obtain the derivation of $s' \to^* s_{n+1}$.
+        \end{enumerate}
+       
+    \end{enumerate}
+\end{enumerate}
+\item \textbf{Conclusion}
+Since we have proved inclusion in both directions, the inductive definition and \textit{Definition 1.1.1(i)} describe the same reflexive-transitive closure relation.
+\end{enumerate}
+\end{solution}
