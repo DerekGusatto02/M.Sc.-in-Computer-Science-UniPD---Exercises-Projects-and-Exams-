@@ -1,0 +1,30 @@
+% \ProvidesPackageRCS Padova
+
+\RequirePackage{ifthen}
+
+\newif\ifbeamerpadovanologos
+\beamerpadovanologostrue
+\DeclareOptionBeamer{nologos}{\beamerpadovanologosfalse}
+
+\DeclareOptionBeamer{compress}{\beamer@compresstrue}
+
+\ProcessOptionsBeamer
+
+\mode<presentation>
+
+\useinnertheme{rectangles}
+\useoutertheme{Padova}
+\usecolortheme{Padova}
+\usefonttheme{Padova}
+
+\setbeamertemplate{navigation symbols}{}
+ \setbeamertemplate{blocks}[rounded][shadow=false]
+
+
+% NOTES
+\setbeameroption{show notes on second screen=bottom} % print
+\setbeamercolor{note page}{bg=white}
+\setbeamercolor{note title}{bg=white}
+
+\mode
+<all>

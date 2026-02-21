@@ -1,0 +1,573 @@
+\documentclass{beamer}
+
+\usetheme{Padova}
+
+\title{\textbf{Project 15}: Extend \textbf{Aexp} to include expressions whose evaluation may modify the current state}
+\subtitle{Software Verification - Homework on Semantics}
+\author{Gusatto Derek}
+\date{2197482}
+
+
+
+\begin{document}
+	\maketitle
+	\begin{frame}{Outline}
+		\tableofcontents
+	\end{frame}
+    
+%----------------------------------------------------
+\section{Introduction}
+%----------------------------------------------------
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Introduction}
+
+In the seen \texttt{While}-semantics, arithmetic expressions are pure, i.e. the evaluation of variables produces a value without modifing any state:
+
+\[
+\mathcal{A}: \textbf{Aexp} \to \text{State} \to \mathbb{Z}\]
+\[\mathcal{A}[\![n]\!]\sigma \Rightarrow  n
+\]
+\[\mathcal{A}[\![x]\!]\sigma \Rightarrow  \sigma(x) 
+\]
+
+However, real programming languages include operators such as:
+
+\begin{center}
+\texttt{++x \quad x++ \quad --x \quad x--}
+\end{center}
+
+These constructs introduce side effects during evaluation.
+\note{
+In the standard While-language, arithmetic expressions are evaluated using a semantic function
+$\mathcal{A}: \textbf{Aexp} \to \text{State} \to \mathbb{Z}$.
+
+This means that expressions like variables and constants simply read the state and produce a value. For example, evaluating a variable x just returns the value of x in the current state, without modifying memory state itself.
+
+This assumption works well for theoretical languages, but it is not realistic when compared to actual programming languages such as C, Java, or C++, where expressions can have side effects.
+    }
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Goal}
+
+The goal is to extend semantics while preserving key properties:
+\begin{itemize}
+    \item Determinism
+    \item Compositionality
+    \item Operational clearity
+\end{itemize}
+\note{
+The goal of this extension is not just to add new syntax, but to do so in a controlled semantic way.
+In particular, we want to preserve three key properties:
+\begin{itemize}
+
+    \item Determinism, so that programs have a unique meaning
+\item Compositionality, so that the meaning of complex expressions depends on their parts
+\item Operational clarity, meaning that the order of evaluation and state changes is explicit
+     
+\end{itemize}
+
+Achieving all three simultaneously is non-trivial once side effects are introduced.}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------
+\section{New Evaluation}
+%----------------------------------------------------
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{New Evaluation}
+
+\begin{alertblock}{Key Observation}
+Expression evaluation must return \alert{both} a value and an updated state.
+\[\mathcal{A}: \textbf{Aexp} \to \text{State} \to (\mathbb{Z},\text{State})\]
+\[\mathcal{A}[\![a]\!]\sigma \Rightarrow  (v, \sigma')
+\]
+\end{alertblock}
+
+Meaning:
+\begin{itemize}
+    \item value $\mathcal{A}[\![a]\!]\sigma$ is produced;
+    \item state may change to $\sigma'$.
+    
+\end{itemize}
+Hence expression become state tranformers.
+\note{
+The key observation is that expression evaluation can no longer return just a value.
+Since expressions may modify the state, their evaluation must return both a value and an updated state.
+
+Formally, the semantic function for arithmetic expressions now maps an expression and a state to a pair consisting of an integer and a new state.
+Intuitively, evaluating an expression produces a value, but it may also transform the state.
+
+This means that arithmetic expressions become state transformers rather than pure computations.
+
+}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------
+\section{Evaluation Order}
+%----------------------------------------------------
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Evaluation order matters}
+
+Without side-effects, easily:
+\[a_1+a_2 = a_2 + a_1\]
+
+But with side effects, for example with increments:
+
+\[\texttt{x++} + \texttt{++x} \neq \texttt{++x}+\texttt{x++}\]
+
+In fact the evaluation order affects both the final value and the final state.
+\note{
+Once expressions have side effects, evaluation order becomes crucial.
+In the pure setting, expressions like $a_1 + a_2$ and $a_2 + a_1$ are equivalent.
+But with side effects, this is no longer true.
+
+For example, the expression $(x++) + (++x)$ does not have the same meaning as $(++x) + (x++)$.)
+
+Both the final value and the final state may differ depending on the order of evaluation.
+}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Left-to-Right Evaluation}
+We need to explicitly define:
+\begin{alertblock}{Evaluation Strategy}
+    Subexpressions are evaluated left-to-right.
+\end{alertblock}
+
+
+\begin{exampleblock}{Example}	
+If a binary expression $a_1 \ + \ a_2$ is evaluated in state $\sigma$:
+\begin{enumerate}
+    \item Evaluate $a_1$ in $\sigma$ obtaining $(v_1,\sigma_1)$
+\item Evaluate $a_2$ in $\sigma_1$ obtaining $(v_2,\sigma_2)$
+\item Return $(v_1 \ + \ v_2, \sigma_2)$
+\end{enumerate}
+
+\end{exampleblock}
+\note{
+To avoid ambiguity, we must explicitly define an evaluation strategy.
+
+In this project, we adopt a left-to-right evaluation order for subexpressions.
+For a binary expression like $a_1 + a_2$, we first evaluate $a_1$ in the current state, obtaining a value and an intermediate state.
+
+Then we evaluate $a_2$ in that intermediate state.
+Finally, we combine the two values and return the final state produced by evaluating $a_2$.
+}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Left-to-Right Evaluation}
+
+
+Reasons:
+\begin{itemize}
+    \item Avoid semantic ambiguity;
+    \item Guaranteee determinism;
+    \item Match real languages (e.g. Java).
+\end{itemize}
+Without fixed order in evaluation:
+\begin{itemize}
+    \item multiple possible results;
+    \item non deterministic semantics.
+\end{itemize}
+\note{
+Fixing a left-to-right evaluation order has several advantages.
+
+First, it avoids semantic ambiguity and ensures determinism.
+Without a fixed order, the same program could have multiple meanings.
+
+Second, it matches the behavior of many real programming languages, such as Java.
+
+Overall, this choice makes the semantics both precise and realistic.
+}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------
+\section{Semantics Domains}
+%----------------------------------------------------
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Semantics Domains}
+
+We follow the standard \texttt{While}-language setting.
+
+\begin{align*}
+Var & : \text{variables}\\
+State &= Var \rightarrow \mathbb{Z}\\
+\sigma & : \text{program state}
+\end{align*}
+
+Functional update:
+
+\[
+\sigma[x \mapsto v]
+\]
+
+represents a new state where variable $x$ has value $v$.
+
+\note{
+We keep the standard semantic domains of the While-language.
+A state is a function from variables to integers.
+We also use functional update notation:
+$\sigma[x \mapsto v]$ represents a new state where variable x is updated to value v, and all other variables remain unchanged.
+
+}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------
+\section{Extended Syntax}
+%----------------------------------------------------
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Extended Syntax}
+
+Arithmetic expressions:
+
+\[
+a ::= n \mid x \mid a_1 + a_2 \mid ++x \mid x++ \mid --x \mid x--
+\]
+\vspace{.5em}
+
+\begin{block}{Note:}
+			\begin{itemize}
+			    \item Increment applies only to variables;
+                \item Boolean expressions and Statements syntax remain unchanged, semantics is modified.
+			\end{itemize}
+		\end{block}
+
+\note{
+We extend the syntax of arithmetic expressions to include increment and decrement operators.
+
+These operators apply only to variables, not to arbitrary expressions.
+
+Importantly, the syntax of boolean expressions and statements remains unchanged.
+
+However, even though their syntax is the same, their semantics will change because they now rely on arithmetic expressions with side effects.
+}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------
+\section{\textbf{Aexp} Semantics}
+%----------------------------------------------------
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Basic arithmetic semantics}
+
+\[\mathcal{A}: \textbf{Aexp} \to \text{State} \to (\mathbb{Z},\text{State})\]
+\vspace{.5em}
+\[\mathcal{A}[\![n]\!]\sigma \Rightarrow (\mathcal{Z}[\![n]\!], \sigma) \]
+\[\mathcal{A}[\![x]\!]\sigma \Rightarrow (\sigma(x), \sigma) \]
+\[\frac{\mathcal{A}[\![a_1]\!] \sigma \Rightarrow (v_1, \sigma_1) \quad \mathcal{A}[\![a_2]\!] \sigma_1 \Rightarrow (v_2, \sigma_2)}{\mathcal{A}[\![a_1 \texttt{ bap } a_2]\!]\sigma \Rightarrow  (v_1 \texttt{ bap } v_2, \sigma_2)}\]
+\[\texttt{bap} \in \{+, -, *\}\]
+
+\note{
+Let’s now look at the updated semantics for basic arithmetic expressions.
+
+Constants and variables behave as before, except that they now explicitly return the unchanged state.
+
+For binary operators, evaluation follows the left-to-right strategy we discussed earlier.
+
+The key point is that the state produced by evaluating the left operand is passed to the right operand.}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{New Expressions}
+
+\[\mathcal{A}: \textbf{Aexp} \to \text{State} \to (\mathbb{Z},\text{State})\]
+\vspace{.5em}
+\[\mathcal{A}[\![++x]\!]\sigma \Rightarrow (\sigma(x)+1, \sigma[x \mapsto \sigma(x)+1]) \]
+\[\mathcal{A}[\![x++]\!]\sigma \Rightarrow (\sigma(x), \sigma[x \mapsto \sigma(x)+1]) \]
+\vspace{.5em}
+\[\mathcal{A}[\![--x]\!]\sigma \Rightarrow (\sigma(x)-1, \sigma[x \mapsto \sigma(x)-1]) \]
+\[\mathcal{A}[\![x--]\!]\sigma \Rightarrow (\sigma(x), \sigma[x \mapsto \sigma(x)-1]) \]
+\note{
+This slide shows the semantics of the new expressions.
+For pre-increment, we first increment the variable in the state and return the updated value.
+
+For post-increment, we return the old value but still update the state afterward.
+
+The same pattern applies symmetrically to pre-decrement and post-decrement.
+
+These rules precisely capture the intuitive behavior of these operators in real languages.
+}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------
+\section{\textbf{Bexp} Semantics}
+%----------------------------------------------------
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Changes in the \textbf{Bexp} Semantics}
+
+\[
+\mathcal{B}: \textbf{Bexp} \to \text{State} \to (\mathbb{T}, \text{State})\]
+
+\[\mathcal{B}[\![true]\!]\sigma \Rightarrow (tt, \sigma) \quad \mathcal{B}[\![false]\!]\sigma \Rightarrow (ff, \sigma)\]
+\[\frac{\mathcal{A}[\![a_1 ]\!]\sigma \Rightarrow (v_1, \sigma_1) \quad \mathcal{A}[\![a_2 ]\!]\sigma_1 \Rightarrow (v_2, \sigma_2)}{\mathcal{B}[\![a_1 = a_2]\!]\sigma\Rightarrow(v_1 = v_2, \sigma_2)}\]
+
+\[\frac{\mathcal{A}[\![a_1 ]\!]\sigma \Rightarrow (v_1, \sigma_1) \quad \mathcal{A}[\![a_2 ]\!]\sigma_1 \Rightarrow (v_2, \sigma_2)}{\mathcal{B}[\![a_1 \leq a_2]\!]\sigma\Rightarrow(v_1 \leq v_2, \sigma_2)}\]
+
+\note{
+Boolean expressions must also be updated, because they may contain arithmetic expressions with side effects.
+
+As a result, boolean evaluation now returns both a boolean value and an updated state.
+
+Equality and comparison operators evaluate their operands left-to-right, threading the state through the evaluation.
+
+This ensures consistency with the arithmetic semantics.
+}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Short-Circuit Boolean Semantics}
+%Since expressions may have side effects, evaluation order for logical operators must be explicitly defined.
+%We adopt \textbf{short-circuit evaluation} (as in Java/C-like languages).
+\[
+\frac{
+\mathcal B[\![b_1]\!]\sigma \Rightarrow (ff,\sigma_1)
+}{
+\mathcal B[\![b_1 \land b_2]\!]\sigma \Rightarrow (ff,\sigma_1)
+}
+\]
+\[
+\frac{
+\mathcal B[\![b_1]\!]\sigma \Rightarrow (tt,\sigma_1)
+\quad
+\mathcal B[\![b_2]\!]\sigma_1 \Rightarrow (bv,\sigma_2)
+}{
+\mathcal B[\![b_1 \land b_2]\!]\sigma \Rightarrow (bv,\sigma_2)
+}
+\]
+
+\[
+\frac{
+\mathcal B[\![b_1]\!]\sigma \Rightarrow (tt,\sigma_1)
+}{
+\mathcal B[\![b_1 \lor b_2]\!]\sigma \Rightarrow (tt,\sigma_1)
+}
+\]
+\[
+\frac{
+\mathcal B[\![b_1]\!]\sigma \Rightarrow (ff,\sigma_1)
+\quad
+\mathcal B[\![b_2]\!]\sigma_1 \Rightarrow (bv,\sigma_2)
+}{
+\mathcal B[\![b_1 \lor b_2]\!]\sigma \Rightarrow (bv,\sigma_2)
+}
+\]
+
+
+
+\begin{alertblock}{Short-circuiting}
+Prevents unnecessary evaluation and avoids unintended side effects.
+\end{alertblock}
+\note{
+Short-circuit semantics become especially important in the presence of side effects.
+
+For conjunction, if the first operand evaluates to false, the second operand is not evaluated.
+
+Similarly, for disjunction, if the first operand evaluates to true, the second operand is skipped.
+
+This behavior prevents unnecessary evaluation and avoids unintended side effects, which closely matches real programming languages.
+}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------
+\section{\textbf{Stm} Semantics}
+%----------------------------------------------------
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Changes in \textbf{Stm} Semantics}
+
+The general structure of the statement semantics remains unchanged:
+
+\[
+\mathcal{S} : \textbf{Stm} \rightarrow (State \hookrightarrow State)
+\]
+
+However, since arithmetic and boolean expressions may now
+produce side effects, all rules involving expressions must
+thread the updated state produced during evaluation
+\note{
+The overall structure of statement semantics remains the same.
+
+Statements still map states to states.
+
+However, any rule that involves expression evaluation must now take into account the updated state returned by that evaluation.
+
+In other words, states must be carefully threaded through all semantic rules.
+}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------
+\section{Structural Operation Semantics}
+%----------------------------------------------------
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Assignment}
+Assignment must use the updated state returned by expression evaluation.
+
+\[
+\frac{\mathcal{A}[\![a]\!]\sigma \Rightarrow (v,\sigma_1)}{\langle x:=a,\sigma\rangle \Rightarrow \sigma_1[x \mapsto v]}
+\]
+
+Meaning:
+\begin{itemize}
+\item evaluate expression $a$ producing value $v$ and state $\sigma_1$;
+\item update variable $x$ in the resulting state.
+\end{itemize}
+\note{
+Assignment is a good example of this change.
+
+First, the expression on the right-hand side is evaluated, producing a value and an intermediate state.
+
+Then the variable on the left-hand side is updated in that intermediate state.
+
+This ensures that side effects inside the expression are not lost.
+}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Conditional and Loop Semantics}
+
+Boolean evaluation may modify the state.
+
+\textbf{If statement:}
+
+\[
+\frac{\mathcal{B}[\![b]\!]\sigma \Rightarrow (tt,\sigma_1)}
+{\langle \text{if } b \text{ then } S_1 \text{ else } S_2,\sigma \rangle
+\Rightarrow
+\langle S_1,\sigma_1\rangle}
+\]\[
+\frac{\mathcal{B}[\![b]\!]\sigma \Rightarrow (ff,\sigma_1)}
+{\langle \text{if } b \text{ then } S_1 \text{ else } S_2,\sigma \rangle
+\Rightarrow
+\langle S_2,\sigma_1\rangle}
+\]
+
+\textbf{While statement:}
+
+\[
+\langle \text{while }b \text{ do }S, \sigma \rangle \Rightarrow \langle \text{if } b \text{ then } (S; \text{ while } b \text{ do } S) \text{ else } skip, \sigma \rangle
+\]
+
+\note{
+Conditionals and loops are also affected, because boolean expressions may now modify the state.
+
+In an if statement, the branch is chosen based on the boolean value, but the state produced by evaluating the condition is passed to the selected branch.
+
+The while loop is defined in terms of the if statement, so it naturally inherits this behavior.
+}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------
+\section{Conclusion}
+%----------------------------------------------------
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Semantic Consequences}
+\begin{exampleblock}{}
+\textbf{Initial state:} $\qquad \qquad \qquad \sigma(x)=5$
+
+\begin{columns}
+
+\column{0.40\textwidth}
+\textbf{Case 1:} $(--x)+(x++)$
+
+\begin{itemize}
+\item Evaluate $--x$:
+\[
+(4,\sigma_1), \quad \sigma_1(x)=4
+\]
+\item Evaluate $x++$ in $\sigma_1$:
+\[
+(4,\sigma_2), \quad \sigma_2(x)=5
+\]
+\end{itemize}
+\[
+\textbf{Result: } 4+4=8
+\]
+
+\column{0.40\textwidth}
+\textbf{Case 2:} $(x++)+(--x)$
+
+\begin{itemize}
+\item Evaluate $x++$:
+\[
+(5,\sigma_1), \quad \sigma_1(x)=6
+\]
+\item Evaluate $--x$ in $\sigma_1$:
+\[
+(5,\sigma_2), \quad \sigma_2(x)=5
+\]
+\end{itemize}
+\[
+\textbf{Result: } 5+5=10
+\]
+
+\end{columns}
+\end{exampleblock}
+
+
+%\vspace{0.5em}
+
+\begin{alertblock}{Evaluation order is semantically relevant}
+Same final state, different result
+\end{alertblock}
+\note{
+This example illustrates why evaluation order matters.
+
+Starting from the same initial state, two expressions that differ only in evaluation order produce different results.
+
+Interestingly, they may even end up in the same final state while producing different values.
+
+This clearly shows that side effects make expression evaluation semantically richer and more subtle.
+}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}{Summary of the Extension}
+
+We extended the While-language by introducing expressions
+with side effects:
+
+\begin{center}
+\texttt{++x \quad x++ \quad --x \quad x--}
+\end{center}
+
+Key semantic changes:
+
+\begin{itemize}
+\item Arithmetic and boolean expressions are no longer pure;
+\item Expression evaluation returns both a value and an updated state:
+\[\mathcal{A}: \textbf{Aexp} \to \text{State} \to (\mathbb{Z},\text{State})\]
+\item Evaluation order must be explicitly fixed
+(left-to-right) to preserve determinism;
+\item Statement semantics must propagate the state
+produced during expression evaluation.
+\end{itemize}
+\note{
+To conclude, we extended the While-language to support arithmetic expressions with side effects.
+
+This required changing the semantics of arithmetic and boolean expressions so that they return both a value and a state.
+
+We fixed a left-to-right evaluation order to preserve determinism.
+
+Finally, we adapted statement semantics to correctly propagate state changes.
+
+Overall, this extension brings the While-language closer to real programming languages while remaining formal and precise.
+}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\end{document}
