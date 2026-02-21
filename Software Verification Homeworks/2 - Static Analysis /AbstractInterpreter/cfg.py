@@ -99,38 +99,40 @@ def build_cfg_stmt(cfg, stmt):
     Raises:
         ValueError: If the statement type is not recognized
     """
-    
     if isinstance(stmt, Skip) or stmt is None:
         # Skip statement: create a single node with no effect
         node = cfg.new_node(Skip())
         return node, node
-    
+        
     elif isinstance(stmt, Assign):
         # Assignment statement: create a single node
-        # The transfer function will handle the actual state update
         node = cfg.new_node(stmt)
         return node, node
-    
+        
     elif isinstance(stmt, Sequence):
         # Sequence of statements: connect them in cascade
-        # stmt1; stmt2; ... ; stmtN
+        if not stmt.stmts:  # <-- AGGIUNTO: gestisci sequenza vuota
+            # Empty sequence: return skip node
+            skip_node = cfg.new_node(Skip())
+            return skip_node, skip_node
+            
         entry_node = None
         exit_node = None
-        
+            
         for s in stmt.stmts:
             # Recursively build CFG for each statement
             s_entry, s_exit = build_cfg_stmt(cfg, s)
-            
+                
             if entry_node is None:
                 # First statement: its entry is the sequence's entry
                 entry_node = s_entry
             else:
                 # Connect the previous statement's exit to this statement's entry
                 cfg.add_edge(exit_node, s_entry)
-            
+                
             # Update the exit node to the current statement's exit
             exit_node = s_exit
-        
+            
         return entry_node, exit_node
     
     elif isinstance(stmt, While):

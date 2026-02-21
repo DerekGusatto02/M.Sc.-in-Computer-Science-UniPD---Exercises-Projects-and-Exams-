@@ -14,7 +14,7 @@
 - [x] `Sequence` class - statement sequences
 - [x] `IfThenElse` class - conditional statements
 - [x] `Skip` class - no-operation statements
-- [x] English comments
+- [x] English comments and docstrings
 
 ### 2. **Interval Abstract Domain**
 - [x] `Interval` class - basic interval representation
@@ -29,7 +29,7 @@
 - [x] `leq()` method - partial order (subset relation)
 - [x] `__repr__()` - string representation
 - [x] Infinity handling (None for ±∞)
-- [x] English comments 
+- [x] English comments and docstrings
 
 ### 3. **Abstract State Domain**
 - [x] `AbstractState` class - non-relational variable-wise domain
@@ -39,7 +39,8 @@
 - [x] `leq()` method - state partial order
 - [x] `assign()` method - variable assignment
 - [x] `__repr__()` - string representation
-- [x] English comments
+- [x] English comments and docstrings
+
 ### 4. **Control Flow Graph (CFG)**
 - [x] `CFGNode` class - single CFG node
   - [x] `id` attribute - unique identifier
@@ -60,8 +61,10 @@
   - [x] Handle `Sequence` statements (cascade nodes)
   - [x] Handle `While` loops (back-edges)
   - [x] Handle `IfThenElse` (branching and merge)
+  - [x] Handle empty sequences gracefully
 - [x] `print_cfg()` function - debug output
-- [x] English comments 
+- [x] English comments and docstrings
+
 ### 5. **Transfer Functions**
 - [x] `eval_aexp()` function - arithmetic expression evaluation
   - [x] Handle `Const` - singleton intervals
@@ -77,7 +80,7 @@
   - [x] Handle condition nodes - pass unchanged
   - [x] Handle merge nodes - pass unchanged
 - [x] `transfer_assign()` function - assignment transfer logic
-- [x] English comments 
+- [x] English comments and docstrings
 
 ### 6. **Fixed-Point Solver**
 - [x] `solve()` function - worklist-based fixed-point solver
@@ -93,11 +96,27 @@
   - [x] Lower bound widening (-∞ when decreases)
   - [x] Upper bound widening (+∞ when increases)
   - [x] Preserves parameters across variables
-- [x] English comments 
+- [x] English comments and docstrings
 
-### 7. **Unit Testing Framework**
+### 7. **Parametrized Interval Domain Int_{m,n}**
+- [x] `ParametrizedInterval` class implementation (extends `Interval`)
+- [x] Constraint checking [a,b] ⊆ [m,n]
+- [x] Handling constant propagation domain (m > n)
+  - [x] Skips validation when m > n
+  - [x] Allows singleton intervals only in constant propagation
+- [x] All arithmetic operations (add, sub, mul, div)
+  - [x] Results automatically clamped to [m, n]
+- [x] All lattice operations (join, meet, leq)
+  - [x] Preserves constraints across operations
+- [x] `_clamp_lower()` and `_clamp_upper()` helper methods
+- [x] `is_singleton()` - detect singleton intervals
+- [x] `is_constant_propagation_domain()` - detect m > n
+- [x] `__repr__()` - formatted string representation with bounds
+- [x] English comments and docstrings
+
+### 8. **Unit Testing Framework**
 - [x] Test file structure (`test.py`)
-- [x] `TestIntervalOperations` class
+- [x] `TestIntervalOperations` class (15 tests)
   - [x] `setUp()` - test fixtures
   - [x] `test_interval_creation()` - basic creation
   - [x] `test_bottom_element()` - bottom properties
@@ -113,7 +132,8 @@
   - [x] `test_bottom_leq()` - bottom properties
   - [x] `test_infinite_bounds()` - infinity handling
   - [x] `test_interval_repr()` - string representation
-- [x] `TestAbstractState` class
+
+- [x] `TestAbstractState` class (7 tests)
   - [x] `setUp()` - test fixtures
   - [x] `test_state_creation()` - state initialization
   - [x] `test_state_bottom()` - bottom state
@@ -121,41 +141,66 @@
   - [x] `test_state_join()` - state union
   - [x] `test_state_leq()` - state ordering
   - [x] `test_state_repr()` - string representation
-- [x] `TestCFGConstruction` class
+
+- [x] `TestCFGConstruction` class (5 tests)
   - [x] `test_simple_assignment()` - single statement
   - [x] `test_sequence()` - multiple statements
   - [x] `test_while_loop()` - loop construction
   - [x] `test_if_then_else()` - conditional construction
   - [x] `test_complex_program()` - combined features
-- [x] `TestTransferFunctions` class
+
+- [x] `TestTransferFunctions` class (4 tests)
   - [x] `setUp()` - test fixtures
   - [x] `test_eval_const()` - constant evaluation
   - [x] `test_eval_var()` - variable evaluation
   - [x] `test_eval_add()` - addition evaluation
   - [x] `test_transfer_assign()` - assignment transfer
-- [x] `TestFixedPointSolver` class
+
+- [x] `TestFixedPointSolver` class (3 tests)
   - [x] `test_simple_assignment_analysis()` - basic analysis
   - [x] `test_sequence_analysis()` - sequence analysis
   - [x] `test_widening()` - widening with fixed-point
-- [x] `TestEdgeCases` class
-  - [x] `test_empty_sequence()` - edge case handling
-  - [x] `test_skip_statement()` - skip handling
+
+- [x] `TestParametrizedIntervals` class (20 tests) ⭐ NEW
+  - [x] `setUp()` - standard, bounded, and constant propagation fixtures
+  - [x] `test_parametrized_interval_creation()` - basic creation
+  - [x] `test_bounded_interval_creation()` - creation with m, n bounds
+  - [x] `test_constraint_violation()` - rejects intervals outside [m,n]
+  - [x] `test_bottom_element()` - bottom with constraints
+  - [x] `test_top_element()` - top element properties
+  - [x] `test_is_singleton()` - singleton detection
+  - [x] `test_constant_propagation_domain()` - m > n detection
+  - [x] `test_bounded_addition()` - addition with bounds
+  - [x] `test_addition_clamping()` - results clamped to [m, n]
+  - [x] `test_subtraction_with_bounds()` - subtraction with bounds
+  - [x] `test_multiplication_with_bounds()` - multiplication with bounds
+  - [x] `test_division_no_zero()` - division without zero in divisor
+  - [x] `test_division_by_zero()` - division by zero returns bottom
+  - [x] `test_join()` - join with bounds
+  - [x] `test_join_with_infinity()` - join resulting in infinity
+  - [x] `test_meet()` - meet with bounds
+  - [x] `test_meet_no_overlap()` - non-overlapping meet returns bottom
+  - [x] `test_leq_ordering()` - partial order with bounds
+  - [x] `test_bottom_leq()` - bottom less-than-or-equal to everything
+  - [x] `test_repr_standard()` - string representation standard domain
+  - [x] `test_repr_bounded()` - string representation bounded domain
+  - [x] `test_repr_const_prop()` - string representation constant propagation
+  - [x] `test_multiple_constraints()` - operations preserve constraints
+  - [x] `test_parametrized_bounds_consistency()` - consistency with bounds
+
+- [x] `TestEdgeCases` class (5 tests)
+  - [x] `test_empty_sequence()` - empty sequence handling
+  - [x] `test_skip_statement()` - skip statement
   - [x] `test_nested_while()` - nested loops
   - [x] `test_negative_intervals()` - negative values
   - [x] `test_singleton_interval()` - single values
-- [x] `run_all_tests()` function - test runner
-- [x] English comments 
 
+- [x] `run_all_tests()` function - test runner with summary
+- [x] English comments and docstrings for all tests
 
 ---
 
 ## 🚧 INCOMPLETE COMPONENTS (TO DO)
-
-### 1. **Parametrized Interval Domain Int_{m,n}**
-- [ ] `ParametrizedInterval` class implementation
-- [ ] Constraint checking [a,b] ⊆ [m,n]
-- [ ] Handling constant propagation domain (m > n)
-- [ ] Unit tests for parametrized intervals
 
 ### 2. **Narrowing Operator**
 - [ ] `apply_narrowing()` function implementation
@@ -194,7 +239,6 @@
 - [ ] Relational analysis domains
 - [ ] Polyhedra domain
 - [ ] Octagon domain
-- [ ] Constant propagation domain
 - [ ] Memory safety analysis
 
 ### 8. **Documentation** (TODO)
@@ -207,7 +251,7 @@
 
 ## 📊 SUMMARY
 
-**Completed: 8/13 major components (61.5%)**
+**Completed: 9/13 major components (69.2%)**
 
 | Component | Status | Tests | Docs |
 |-----------|--------|-------|------|
@@ -217,17 +261,31 @@
 | CFG Construction | ✅ Done | ✅ 5 tests | ✅ |
 | Transfer Functions | ✅ Done | ✅ 4 tests | ✅ |
 | Fixed-Point Solver | ✅ Done | ✅ 3 tests | ✅ |
-| Unit Tests | ✅ Done | 44 tests | ✅ |
-| **Int_{m,n}** | 🚧 TODO | - | - |
+| **Int_{m,n}** | ✅ Done | ✅ 20 tests | ✅ |
 | **Narrowing** | 🚧 TODO | - | - |
 | **Threshold Widening** | 🚧 TODO | - | - |
 | **Config System** | 🚧 TODO | - | - |
 | **Main Entry** | 🚧 TODO | - | - |
 
-**Total Unit Tests: 44 tests**
+**Total Unit Tests: 64 tests** ✅ (100% passing)
 
 ### Running Tests
 ```bash
 python test.py        # Run all tests with verbose output
 python -m unittest test -v  # Alternative
+```
+
+### Files Structure
+```
+AbstractInterpreter/
+├── ast_nodes.py                 # AST definitions
+├── interval.py                  # Interval domain
+├── interval_parametrized.py     # Parametrized Int_{m,n}
+├── state.py                     # Abstract state domain
+├── cfg.py                       # Control flow graph
+├── transfer.py                  # Transfer functions
+├── solver.py                    # Fixed-point solver
+├── test.py                      # Unit tests (64 tests)
+├── README.md                    # This file
+└── main.py                      # (TO DO)
 ```

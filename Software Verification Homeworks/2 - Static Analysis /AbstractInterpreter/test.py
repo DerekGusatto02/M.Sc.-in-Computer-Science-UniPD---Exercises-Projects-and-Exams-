@@ -8,6 +8,7 @@ the fixed-point solver.
 
 import unittest
 from interval import Interval
+from interval_parametrized import ParametrizedInterval
 from state import AbstractState
 from ast_nodes import Const, Var, Add, Sub, Assign, While, Sequence, IfThenElse, Skip
 from cfg import build_cfg, print_cfg
@@ -295,17 +296,237 @@ class TestFixedPointSolver(unittest.TestCase):
         # With widening, should converge
         self.assertIsNotNone(states_with_widening)
 
+class TestParametrizedIntervals(unittest.TestCase):
+    """Unit tests for the parametrized interval domain Int_{m,n}."""
+    
+    def setUp(self):
+        """Set up test fixtures."""
+        from interval_parametrized import ParametrizedInterval
+        
+        # Standard interval domain Int_{-∞, +∞}
+        self.a = ParametrizedInterval(0, 5)
+        self.b = ParametrizedInterval(1, 2)
+        
+        # Bounded domain Int_{0, 100}
+        self.a_bounded = ParametrizedInterval(0, 5, m=0, n=100)
+        self.b_bounded = ParametrizedInterval(1, 2, m=0, n=100)
+        
+        # Constant propagation domain Int_{10, 5} (m > n)
+        self.const_prop = ParametrizedInterval(42, 42, m=10, n=5)
+        
+        self.bottom = ParametrizedInterval.bottom()
+        self.top = ParametrizedInterval.top()
+    
+    def test_parametrized_interval_creation(self):
+        """Test creation of parametrized intervals."""
+        self.assertEqual(self.a.lower, 0)
+        self.assertEqual(self.a.upper, 5)
+        self.assertEqual(self.a.m, float('-inf'))
+        self.assertEqual(self.a.n, float('+inf'))
+    
+    def test_bounded_interval_creation(self):
+        """Test creation with bounds m and n."""
+        self.assertEqual(self.a_bounded.m, 0)
+        self.assertEqual(self.a_bounded.n, 100)
+    
+    def test_constraint_violation(self):
+        """Test that intervals outside [m,n] are rejected."""
+        from interval_parametrized import ParametrizedInterval
+        
+        with self.assertRaises(AssertionError):
+            # Try to create [50, 150] in Int_{0, 100}
+            ParametrizedInterval(50, 150, m=0, n=100)
+    
+    def test_bottom_element(self):
+        """Test bottom element properties."""
+        from interval_parametrized import ParametrizedInterval
+        
+        self.assertTrue(self.bottom.is_bottom)
+        # Bottom with constraints
+        bottom_bounded = ParametrizedInterval.bottom(m=0, n=100)
+        self.assertTrue(bottom_bounded.is_bottom)
+        self.assertEqual(bottom_bounded.m, 0)
+        self.assertEqual(bottom_bounded.n, 100)
+    
+    def test_top_element(self):
+        """Test top element properties."""
+        self.assertIsNone(self.top.lower)
+        self.assertIsNone(self.top.upper)
+        self.assertFalse(self.top.is_bottom)
+    
+    def test_is_singleton(self):
+        """Test singleton interval detection."""
+        singleton = ParametrizedInterval(42, 42)
+        self.assertTrue(singleton.is_singleton())
+        
+        non_singleton = ParametrizedInterval(0, 5)
+        self.assertFalse(non_singleton.is_singleton())
+        
+        infinite = ParametrizedInterval(None, None)
+        self.assertFalse(infinite.is_singleton())
+    
+    def test_constant_propagation_domain(self):
+        """Test detection of constant propagation domain (m > n)."""
+        from interval_parametrized import ParametrizedInterval
+        
+        const_prop = ParametrizedInterval(42, 42, m=10, n=5)
+        self.assertTrue(const_prop.is_constant_propagation_domain())
+        
+        normal = ParametrizedInterval(42, 42, m=0, n=100)
+        self.assertFalse(normal.is_constant_propagation_domain())
+    
+    def test_bounded_addition(self):
+        """Test addition with bounded domain."""
+        result = self.a_bounded.add(self.b_bounded)
+        self.assertEqual(result.lower, 1)   # 0 + 1
+        self.assertEqual(result.upper, 7)   # 5 + 2
+        self.assertEqual(result.m, 0)
+        self.assertEqual(result.n, 100)
+    
+    def test_addition_clamping(self):
+        """Test that addition results are clamped to [m, n]."""
+        from interval_parametrized import ParametrizedInterval
+        
+        # Int_{0, 10}: [5, 8] + [2, 5] = [7, 13] -> clamped to [7, 10]
+        a = ParametrizedInterval(5, 8, m=0, n=10)
+        b = ParametrizedInterval(2, 5, m=0, n=10)
+        result = a.add(b)
+        
+        self.assertEqual(result.lower, 7)
+        self.assertIsNone(result.upper)  # Clamped to +∞ (exceeds n)
+    
+    def test_subtraction_with_bounds(self):
+        """Test subtraction with bounded domain."""
+        result = self.a_bounded.sub(self.b_bounded)
+        self.assertEqual(result.lower, -2)  # 0 - 2
+        self.assertEqual(result.upper, 4)   # 5 - 1
+    
+    def test_multiplication_with_bounds(self):
+        """Test multiplication with bounded domain."""
+        result = self.a_bounded.mul(self.b_bounded)
+        self.assertEqual(result.lower, 0)
+        self.assertEqual(result.upper, 10)
+    
+    def test_division_no_zero(self):
+        """Test division when divisor has no zero."""
+        from interval_parametrized import ParametrizedInterval
+        
+        dividend = ParametrizedInterval(10, 20)
+        divisor = ParametrizedInterval(2, 5)
+        result = dividend.div(divisor)
+        
+        self.assertFalse(result.is_bottom)
+        self.assertEqual(result.lower, 2)   # 10 // 5
+        self.assertEqual(result.upper, 10)  # 20 // 2
+    
+    def test_division_by_zero(self):
+        """Test division by zero returns bottom."""
+        from interval_parametrized import ParametrizedInterval
+        
+        dividend = ParametrizedInterval(10, 20)
+        divisor = ParametrizedInterval(-1, 1)  # Contains 0
+        result = dividend.div(divisor)
+        
+        self.assertTrue(result.is_bottom)
+    
+    def test_join(self):
+        """Test join (union) operation."""
+        result = self.a_bounded.join(self.b_bounded)
+        self.assertEqual(result.lower, 0)   # min(0, 1)
+        self.assertEqual(result.upper, 5)   # max(5, 2)
+    
+    def test_join_with_infinity(self):
+        """Test join that results in infinity."""
+        from interval_parametrized import ParametrizedInterval
+        
+        a = ParametrizedInterval(0, 50, m=0, n=100)
+        b = ParametrizedInterval(60, None, m=0, n=100)  # [60, +∞]
+        result = a.join(b)
+        
+        self.assertEqual(result.lower, 0)
+        self.assertIsNone(result.upper)  # +∞
+    
+    def test_meet(self):
+        """Test meet (intersection) operation."""
+        result = self.a_bounded.meet(self.b_bounded)
+        self.assertEqual(result.lower, 1)   # max(0, 1)
+        self.assertEqual(result.upper, 2)   # min(5, 2)
+    
+    def test_meet_no_overlap(self):
+        """Test meet with non-overlapping intervals returns bottom."""
+        from interval_parametrized import ParametrizedInterval
+        
+        a = ParametrizedInterval(0, 5, m=0, n=100)
+        b = ParametrizedInterval(10, 20, m=0, n=100)
+        result = a.meet(b)
+        
+        self.assertTrue(result.is_bottom)
+    
+    def test_leq_ordering(self):
+        """Test partial order with bounded domain."""
+        self.assertTrue(self.b_bounded.leq(self.a_bounded))
+        self.assertFalse(self.a_bounded.leq(self.b_bounded))
+    
+    def test_bottom_leq(self):
+        """Test that bottom is less-than-or-equal to everything."""
+        from interval_parametrized import ParametrizedInterval
+        
+        bottom = ParametrizedInterval.bottom(m=0, n=100)
+        self.assertTrue(bottom.leq(self.a_bounded))
+        self.assertTrue(bottom.leq(self.bottom))
+    
+    def test_repr_standard(self):
+        """Test string representation of standard intervals."""
+        self.assertEqual(repr(self.a), "[0, 5]_{-∞,+∞}")
+        self.assertEqual(repr(self.bottom), "⊥_{-∞,+∞}")
+    
+    def test_repr_bounded(self):
+        """Test string representation of bounded intervals."""
+        self.assertEqual(repr(self.a_bounded), "[0, 5]_{0,100}")
+    
+    def test_repr_const_prop(self):
+        """Test string representation of constant propagation intervals."""
+        self.assertEqual(repr(self.const_prop), "[42, 42]_{10,5}")
+    
+    def test_multiple_constraints(self):
+        """Test operations preserve constraints."""
+        from interval_parametrized import ParametrizedInterval
+        
+        a = ParametrizedInterval(10, 20, m=0, n=100)
+        b = ParametrizedInterval(5, 15, m=0, n=100)
+        
+        # All operations should preserve m=0, n=100
+        for result in [a.add(b), a.sub(b), a.mul(b), a.join(b), a.meet(b)]:
+            self.assertEqual(result.m, 0)
+            self.assertEqual(result.n, 100)
+    
+    def test_parametrized_bounds_consistency(self):
+        """Test that operations maintain consistency with bounds."""
+        from interval_parametrized import ParametrizedInterval
+        
+        # Int_{-10, 10}: ensure results stay within bounds
+        a = ParametrizedInterval(-5, 5, m=-10, n=10)
+        b = ParametrizedInterval(-3, 3, m=-10, n=10)
+        
+        result_add = a.add(b)
+        # [-5 + (-3), 5 + 3] = [-8, 8] within [-10, 10]
+        self.assertEqual(result_add.lower, -8)
+        self.assertEqual(result_add.upper, 8)
 
 class TestEdgeCases(unittest.TestCase):
     """Unit tests for edge cases and corner cases."""
     
     def test_empty_sequence(self):
         """Test handling of empty sequence."""
+        from ast_nodes import Sequence
+        from cfg import build_cfg
+        
         prog = Sequence([])
         cfg = build_cfg(prog)
         
-        # Should create at least entry and exit
+        # Empty sequence should still have entry and exit
         self.assertIsNotNone(cfg.entry)
+        self.assertIsNotNone(cfg.exit)
     
     def test_skip_statement(self):
         """Test Skip statement."""
@@ -356,6 +577,7 @@ def run_all_tests():
     suite.addTests(loader.loadTestsFromTestCase(TestCFGConstruction))
     suite.addTests(loader.loadTestsFromTestCase(TestTransferFunctions))
     suite.addTests(loader.loadTestsFromTestCase(TestFixedPointSolver))
+    suite.addTests(loader.loadTestsFromTestCase(TestParametrizedIntervals))
     suite.addTests(loader.loadTestsFromTestCase(TestEdgeCases))
     
     # Run tests with verbose output

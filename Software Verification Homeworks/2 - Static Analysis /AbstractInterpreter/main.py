@@ -222,3 +222,15 @@ if __name__ == "__main__":
     print("\n" + "=" * 50)
     print("All tests completed!")
     print("=" * 50)
+        # Standard interval domain (Int_{-∞, +∞})
+    a = Interval(0, 5)
+    
+    # Bounded domain (Int_{0, 100})
+    b = ParametrizedInterval(0, 5, m=0, n=100)
+    
+    # Constant propagation (Int_{10, 5} dove m > n)
+    c = ParametrizedInterval(42, 42, m=10, n=5)
+    
+    # Tutte le operazioni di Interval funzionano automaticamente
+    result = b.add(ParametrizedInterval(1, 2, m=0, n=100))
+    assert result.m == 0 and result.n == 100  # Constraints preserved!
